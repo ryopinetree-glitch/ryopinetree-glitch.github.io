@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>komorebi（コモレビ）｜心の整理・自己肯定・気分転換</title>
+
+  <!-- ホーム画面追加（PWA / Webクリップ）用のメタ設定 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="komorebi">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#FAF8F3">
+  <link id="apple-touch-icon" rel="apple-touch-icon" sizes="180x180" href="">
+  <link id="app-favicon" rel="icon" type="image/png" sizes="512x512" href="">
+  <link id="app-manifest" rel="manifest" href="">
+
+  <!-- Tailwind CSS の読み込み -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts（温かみのある日本語フォントと可読性の高い欧文フォント） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=M+PLUS+Rounded+1c:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans JP"', '"Inter"', 'sans-serif'],
+            rounded: ['"M PLUS Rounded 1c"', '"Noto Sans JP"', 'sans-serif'],
+          },
+          colors: {
+            komorebi: {
+              bg: '#FAF8F3',
+              card: '#FFFFFF',
+              green: '#4A7C59',
+              greenLight: '#E8F3EC',
+              greenDark: '#2F523A',
+              sun: '#F59E0B',
+              sunLight: '#FEF3C7',
+              peach: '#FFEDD5',
+              ink: '#26322B',
+              muted: '#64746B'
+            }
+          },
+          boxShadow: {
+            soft: '0 8px 30px -6px rgba(74, 124, 89, 0.10)',
+            card: '0 4px 20px -2px rgba(38, 50, 43, 0.06)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* 全体のスムーズなスクロールとタップハイライト調整 */
+    html, body {
+      background-color: #FAF8F3;
+      color: #26322B;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+    }
+
+    /* 木漏れ日のような柔らかな背景グラデーション */
+    .komorebi-ambient {
+      background:
+        radial-gradient(circle at 88% 6%, rgba(253, 224, 71, 0.24) 0%, rgba(254, 215, 170, 0.14) 32%, transparent 65%),
+        radial-gradient(circle at 12% 22%, rgba(167, 243, 208, 0.22) 0%, transparent 55%),
+        #FAF8F3;
+    }
+
+    /* 新芽と光のやさしい浮遊アニメーション */
+    @keyframes gentleFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-4px); }
+    }
+    .animate-float {
+      animation: gentleFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.65; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.06); }
+    }
+    .animate-glow {
+      animation: pulseGlow 3.5s ease-in-out infinite;
+    }
+
+    /* フェードイン切り替え */
+    .tab-panel {
+      animation: fadeSlideUp 0.28s ease-out;
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* カスタムレンジスライダー */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #CBD5E1 0%, #FDE68A 50%, #6EE7B7 100%);
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 24px;
+      width: 24px;
+      border-radius: 50%;
+      background: #4A7C59;
+      border: 3px solid #FFFFFF;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      margin-top: -7px;
+    }
+
+    /* 横スクロールチップのスクロールバー非表示 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="komorebi-ambient min-h-screen flex flex-col font-sans antialiased selection:bg-komorebi-greenLight selection:text-komorebi-greenDark">
+
+  <!-- アイコン自動生成用の非表示キャンバス（ホーム画面アイコン・ファビコン用） -->
+  <canvas id="iconGeneratorCanvas" width="512" height="512" class="hidden"></canvas>
+
+  <!-- カスタムトースト通知 -->
+  <div id="toastContainer" class="fixed top-4 inset-x-4 z-50 flex flex-col items-center pointer-events-none space-y-2"></div>
+
+  <!-- ヘッダー（シンプルで落ち着いたデザイン） -->
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-[#FAF8F3]/85 border-b border-emerald-900/5">
+    <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <!-- アプリアイコンシンボル -->
+        <div class="w-10 h-10 rounded-2xl shadow-sm overflow-hidden flex-shrink-0 border border-amber-200/70 bg-gradient-to-br from-emerald-50 via-amber-50 to-orange-100 flex items-center justify-center">
+          <svg viewBox="0 0 100 100" class="w-full h-full" aria-hidden="true">
+            <defs>
+              <linearGradient id="skyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#E6F4EA"/>
+                <stop offset="50%" stop-color="#FEF7E0"/>
+                <stop offset="100%" stop-color="#FCE8D5"/>
+              </linearGradient>
+              <linearGradient id="rayGrad" x1="100%" y1="0%" x2="20%" y2="100%">
+                <stop offset="0%" stop-color="#FDE047" stop-opacity="0.55"/>
+                <stop offset="100%" stop-color="#FEF08A" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <rect width="100" height="100" rx="22" fill="url(#skyGrad)"/>
+            <polygon points="100,0 55,0 15,90 65,90" fill="url(#rayGrad)"/>
+            <path d="M58,8 Q76,12 95,28" stroke="#785A46" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <ellipse cx="64" cy="14" rx="8" ry="4" transform="rotate(-25 64 14)" fill="#4A7C59"/>
+            <ellipse cx="78" cy="12" rx="9" ry="4.5" transform="rotate(-15 78 12)" fill="#D4A338"/>
+            <ellipse cx="86" cy="22" rx="9" ry="4.5" transform="rotate(20 86 22)" fill="#3B6E4C"/>
+            <ellipse cx="72" cy="24" rx="7" ry="3.5" transform="rotate(35 72 24)" fill="#6BA37A"/>
+            <circle cx="48" cy="42" r="2" fill="#FFFBEB"/>
+            <circle cx="62" cy="52" r="1.6" fill="#FEF08A"/>
+            <circle cx="38" cy="56" r="1.5" fill="#FFFBEB"/>
+            <ellipse cx="50" cy="76" rx="18" ry="4" fill="#FFFFFF" fill-opacity="0.7"/>
+            <path d="M50,76 Q50,64 50,60" stroke="#4A7C59" stroke-width="3" stroke-linecap="round"/>
+            <path d="M50,62 C41,52 34,56 38,64 C41,69 48,66 50,62 Z" fill="#5D966D"/>
+            <path d="M50,62 C59,52 66,56 62,64 C59,69 52,66 50,62 Z" fill="#7AB356"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="font-rounded font-bold text-lg tracking-tight text-komorebi-ink leading-tight">komorebi</h1>
+          <p class="text-[11px] text-komorebi-muted">心にやさしい光をあてる場所</p>
+        </div>
+      </div>
+
+      <!-- さりげない木漏れ日のしずくカウンター -->
+      <button
+        type="button"
+        onclick="switchTab('garden')"
+        class="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white/80 hover:bg-amber-50 border border-amber-200/70 text-xs font-medium text-amber-900 transition"
+        title="がんばり貯金を見る"
+      >
+        <span>☀️</span>
+        <span id="headerDropsCount" class="font-bold text-komorebi-green">0</span>
+        <span class="text-[11px] text-komorebi-muted">しずく</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- メインコンテンツエリア -->
+  <main class="flex-1 max-w-2xl w-full mx-auto px-4 pt-4 pb-28">
+
+    <!-- ========================================================= -->
+    <!-- タブ1: 気持ちの整理 ＆ AI対話（モヤモヤ・恋愛・人生・自信） -->
+    <!-- ========================================================= -->
+    <section id="panel-journal" class="tab-panel space-y-5">
+
+      <!-- 今日のひとことカード -->
+      <div class="bg-white/90 backdrop-blur-xs rounded-3xl p-5 shadow-soft border border-amber-100/80 relative overflow-hidden">
+        <div class="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-amber-200/30 blur-xl pointer-events-none"></div>
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-komorebi-sunLight text-amber-800 mb-2">
+              ☀️ 今日の木漏れ日メッセージ
+            </span>
+            <p id="dailyAffirmation" class="text-sm sm:text-base font-medium text-komorebi-ink leading-relaxed">
+              「ちゃんとできているのに自信がない」のは、それだけあなたが誠実に物事と向き合ってきた証拠です。今日は少しだけ肩の力を抜いてみましょう。
+            </p>
+          </div>
+          <button
+            type="button"
+            onclick="rotateDailyMessage()"
+            class="p-2.5 rounded-2xl bg-komorebi-bg hover:bg-amber-100/60 text-komorebi-muted hover:text-komorebi-ink transition flex-shrink-0"
+            title="別の言葉を表示"
+            aria-label="別の言葉を表示"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- モヤモヤ・悩み入力フォーム -->
+      <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-card border border-emerald-900/5 space-y-4">
+        <div>
+          <h2 class="font-rounded font-bold text-base sm:text-lg text-komorebi-ink flex items-center gap-2">
+            <span>🌿 今の気持ちをそのまま言葉にする</span>
+          </h2>
+          <p class="text-xs text-komorebi-muted mt-1">
+            まとまっていなくても大丈夫。AIが否定せず受け止め、新しい視点と小さな一歩を一緒に見つけます。
+          </p>
+        </div>
+
+        <!-- 悩みテーマ選択チップ -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-medium text-komorebi-muted block">今のテーマを選ぶ</label>
+          <div id="categoryChips" class="flex flex-wrap gap-2">
+            <button type="button" data-category="自信・自己評価のギャップ" class="category-chip active px-3.5 py-2 rounded-2xl text-xs font-medium transition border bg-komorebi-green text-white border-komorebi-green shadow-xs">
+              ✨ 頑張ってるのに自信がない
+            </button>
+            <button type="button" data-category="日頃のモヤモヤ" class="category-chip px-3.5 py-2 rounded-2xl text-xs font-medium transition border bg-komorebi-bg text-komorebi-ink border-emerald-900/10 hover:bg-komorebi-greenLight/50">
+              ☁️ 日頃のモヤモヤ
+            </button>
+            <button type="button" data-category="恋愛の悩み" class="category-chip px-3.5 py-2 rounded-2xl text-xs font-medium transition border bg-komorebi-bg text-komorebi-ink border-emerald-900/10 hover:bg-komorebi-greenLight/50">
+              💌 恋愛の悩み
+            </button>
+            <button type="button" data-category="人生・将来の悩み" class="category-chip px-3.5 py-2 rounded-2xl text-xs font-medium transition border bg-komorebi-bg text-komorebi-ink border-emerald-900/10 hover:bg-komorebi-greenLight/50">
+              🧭 人生・これからのこと
+            </button>
+          </div>
+        </div>
+
+        <!-- 書き出し補助プロンプト（ワンタップ挿入） -->
+        <div class="space-y-1.5">
+          <span class="text-[11px] text-komorebi-muted block">書き出しのヒント（タップで入力欄に入ります）：</span>
+          <div id="promptStarters" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+        </div>
+
+        <!-- テキスト入力欄 -->
+        <div>
+          <textarea
+            id="worryInput"
+            rows="4"
+            placeholder="例：周りからは順調そうに見えたり褒められたりするのに、自分の中では全然自信が持てなくて、いつもどこかで不安になってしまいます…"
+            class="w-full rounded-2xl bg-komorebi-bg/80 border border-emerald-900/10 focus:border-komorebi-green focus:ring-2 focus:ring-komorebi-green/20 p-4 text-sm text-komorebi-ink placeholder:text-komorebi-muted/60 outline-none transition resize-none leading-relaxed"
+          ></textarea>
+        </div>
+
+        <!-- 今の心のエネルギー残量スライダー -->
+        <div class="bg-komorebi-bg/70 rounded-2xl p-3.5 space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-medium text-komorebi-ink">今の心のエネルギー残量</span>
+            <span id="energyLabel" class="font-bold text-komorebi-green">50%（少しお疲れ気味）</span>
+          </div>
+          <input id="energySlider" type="range" min="10" max="100" step="5" value="50" class="w-full">
+        </div>
+
+        <!-- 送信ボタン -->
+        <button
+          id="analyzeBtn"
+          type="button"
+          onclick="handleJournalSubmit()"
+          class="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-komorebi-green to-[#5C946E] hover:opacity-95 active:scale-[0.99] text-white font-rounded font-bold text-sm sm:text-base shadow-md shadow-emerald-900/15 transition flex items-center justify-center gap-2"
+        >
+          <span>AIと一緒に気持ちを整理する</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- AIからのフィードバック表示エリア -->
+      <div id="aiResponseContainer" class="hidden space-y-4">
+        <div class="bg-gradient-to-br from-white via-emerald-50/40 to-amber-50/50 rounded-3xl p-5 sm:p-6 shadow-soft border border-emerald-900/10 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-8 h-8 rounded-full bg-komorebi-greenLight text-komorebi-green flex items-center justify-center text-sm">🌱</span>
+              <div>
+                <h3 class="font-rounded font-bold text-sm text-komorebi-ink">komorebi からの視点ギフト</h3>
+                <p id="responseCategoryTag" class="text-[11px] text-komorebi-muted"></p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onclick="jumpToCuratedForCurrentTopic()"
+              class="px-3 py-1.5 rounded-xl bg-amber-100/80 hover:bg-amber-200/80 text-amber-900 text-xs font-medium transition"
+            >
+              この悩みに合う動画・記事を見る →
+            </button>
+          </div>
+
+          <div class="bg-white/80 rounded-2xl p-4 border border-emerald-900/5 space-y-1">
+            <span class="text-xs font-bold text-komorebi-green">① まず、今のあなたへ</span>
+            <p id="resEmpathy" class="text-sm text-komorebi-ink leading-relaxed"></p>
+          </div>
+
+          <div class="bg-white/80 rounded-2xl p-4 border border-emerald-900/5 space-y-1">
+            <span class="text-xs font-bold text-amber-700">② モヤモヤ・自信のなさの背景にあるもの</span>
+            <p id="resInsight" class="text-sm text-komorebi-ink leading-relaxed"></p>
+          </div>
+
+          <div class="bg-komorebi-greenLight/60 rounded-2xl p-4 border border-komorebi-green/15 space-y-1">
+            <span class="text-xs font-bold text-komorebi-greenDark">③ 見方を少し変えてみると…</span>
+            <p id="resReframe" class="text-sm font-medium text-komorebi-greenDark leading-relaxed"></p>
+          </div>
+
+          <div class="bg-komorebi-sunLight/60 rounded-2xl p-4 border border-amber-300/30 flex items-start gap-3">
+            <span class="text-lg">👣</span>
+            <div>
+              <span class="text-xs font-bold text-amber-900 block">④ 元気をつくる1ミリのアクション</span>
+              <p id="resAction" class="text-sm text-amber-950 mt-0.5 leading-relaxed"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- これまでの整理ログ（履歴） -->
+      <div class="space-y-3 pt-2">
+        <div class="flex items-center justify-between px-1">
+          <h3 class="font-rounded font-bold text-sm text-komorebi-ink">📖 これまでの心の整理ノート</h3>
+          <span id="journalCountBadge" class="text-xs text-komorebi-muted">0件</span>
+        </div>
+        <div id="journalHistoryList" class="space-y-3"></div>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- タブ2: 2方向キュレーション（気分転換 ＆ 解決の糸口）          -->
+    <!-- ========================================================= -->
+    <section id="panel-discover" class="tab-panel hidden space-y-5">
+
+      <div class="bg-white rounded-3xl p-5 shadow-card border border-emerald-900/5 space-y-4">
+        <div>
+          <h2 class="font-rounded font-bold text-base sm:text-lg text-komorebi-ink">
+            🌤️ 気分転換 ＆ 視点のヒント集
+          </h2>
+          <p class="text-xs text-komorebi-muted mt-1 leading-relaxed">
+            悩みから一度離れて笑える・癒やされる<strong>「気分転換」</strong>と、考え方のクセに気づける<strong>「解決の糸口」</strong>の両面からコンテンツをお届けします。
+          </p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input
+            id="curateTopicInput"
+            type="text"
+            placeholder="例：恋愛の不安を忘れたい、自己肯定感を上げたい…"
+            class="flex-1 rounded-2xl bg-komorebi-bg border border-emerald-900/10 focus:border-komorebi-green px-4 py-3 text-sm outline-none"
+          >
+          <button
+            id="curateFetchBtn"
+            type="button"
+            onclick="fetchFreshCuration()"
+            class="px-4 py-3 rounded-2xl bg-komorebi-green hover:opacity-95 active:scale-95 text-white text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 whitespace-nowrap shadow-xs"
+          >
+            <span>✨ 両面から探す</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-1.5 p-1 bg-komorebi-bg rounded-2xl">
+          <button type="button" onclick="setDiscoverFilter('all')" data-filter="all" class="discover-filter-btn active py-2 px-2 rounded-xl text-xs font-bold bg-white text-komorebi-ink shadow-2xs transition">
+            すべて表示
+          </button>
+          <button type="button" onclick="setDiscoverFilter('refresh')" data-filter="refresh" class="discover-filter-btn py-2 px-2 rounded-xl text-xs font-medium text-komorebi-muted hover:text-komorebi-ink transition">
+            🎈 気分転換・笑い
+          </button>
+          <button type="button" onclick="setDiscoverFilter('insight')" data-filter="insight" class="discover-filter-btn py-2 px-2 rounded-xl text-xs font-medium text-komorebi-muted hover:text-komorebi-ink transition">
+            💡 視点転換・糸口
+          </button>
+        </div>
+      </div>
+
+      <div id="liveCurationResults" class="hidden space-y-3">
+        <div class="flex items-center justify-between px-1">
+          <span class="text-xs font-bold text-komorebi-greenDark flex items-center gap-1.5">
+            <span>🔍 今の気分に合わせて見つけたおすすめ</span>
+          </span>
+          <button type="button" onclick="document.getElementById('liveCurationResults').classList.add('hidden')" class="text-xs text-komorebi-muted hover:text-komorebi-ink">閉じる</button>
+        </div>
+        <div id="liveCurationCards" class="space-y-3"></div>
+      </div>
+
+      <div id="curationList" class="space-y-3.5"></div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- タブ3: がんばり貯金 ＆ AI応援レター（自己肯定感を育てる）    -->
+    <!-- ========================================================= -->
+    <section id="panel-garden" class="tab-panel hidden space-y-5">
+
+      <div class="bg-gradient-to-b from-emerald-50/90 via-amber-50/50 to-white rounded-3xl p-6 shadow-soft border border-emerald-900/10 text-center space-y-3 relative overflow-hidden">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-amber-200/80 text-xs font-bold text-amber-800">
+          <span>☀️ がんばりの木漏れ日：</span>
+          <span id="totalDropsCount" class="text-base text-komorebi-green">0</span>
+          <span>しずく</span>
+        </div>
+
+        <div class="w-28 h-28 mx-auto rounded-full bg-white/80 shadow-inner border border-amber-100 flex items-center justify-center animate-float">
+          <svg id="sproutGrowthSvg" viewBox="0 0 120 120" class="w-24 h-24">
+            <circle cx="60" cy="60" r="50" fill="#FEF9C3" fill-opacity="0.55" class="animate-glow"/>
+            <ellipse cx="60" cy="95" rx="28" ry="6" fill="#D1FAE5"/>
+            <path d="M60,95 Q60,72 60,62" stroke="#4A7C59" stroke-width="4.5" stroke-linecap="round"/>
+            <path d="M60,68 C42,50 28,58 36,72 C42,81 56,75 60,68 Z" fill="#5D966D"/>
+            <path d="M60,68 C78,50 92,58 84,72 C78,81 64,75 60,68 Z" fill="#7AB356"/>
+            <g id="sproutBlossom" class="hidden">
+              <circle cx="60" cy="48" r="7" fill="#FDE047"/>
+              <circle cx="60" cy="48" r="3.5" fill="#F59E0B"/>
+            </g>
+          </svg>
+        </div>
+
+        <div>
+          <h2 id="sproutStageTitle" class="font-rounded font-bold text-base text-komorebi-ink">
+            芽吹いたばかりの小さな双葉
+          </h2>
+          <p class="text-xs text-komorebi-muted mt-1 max-w-md mx-auto leading-relaxed">
+            「できて当たり前」と思って見過ごしている毎日の努力を記録しましょう。客観的な事実を積み重ねることで、根拠のある自信が育ちます。
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-3xl p-5 shadow-card border border-emerald-900/5 space-y-4">
+        <h3 class="font-rounded font-bold text-sm text-komorebi-ink">
+          🌱 今日の「当たり前にこなしたすごいこと」をタップで記録
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button type="button" onclick="addEffortLog('朝起きて、今日という一日を始めた')" class="text-left p-3 rounded-2xl bg-komorebi-bg hover:bg-komorebi-greenLight/60 active:scale-[0.99] border border-emerald-900/5 text-xs font-medium text-komorebi-ink transition flex items-center gap-2.5">
+            <span class="text-base">🌅</span>
+            <span>朝起きて、今日という一日を始めた</span>
+          </button>
+          <button type="button" onclick="addEffortLog('仕事ややるべきことに誠実に向き合った')" class="text-left p-3 rounded-2xl bg-komorebi-bg hover:bg-komorebi-greenLight/60 active:scale-[0.99] border border-emerald-900/5 text-xs font-medium text-komorebi-ink transition flex items-center gap-2.5">
+            <span class="text-base">💼</span>
+            <span>仕事ややるべきことに誠実に向き合った</span>
+          </button>
+          <button type="button" onclick="addEffortLog('相手を思いやって言葉や態度を選んだ')" class="text-left p-3 rounded-2xl bg-komorebi-bg hover:bg-komorebi-greenLight/60 active:scale-[0.99] border border-emerald-900/5 text-xs font-medium text-komorebi-ink transition flex items-center gap-2.5">
+            <span class="text-base">🤝</span>
+            <span>相手を思いやって言葉や態度を選んだ</span>
+          </button>
+          <button type="button" onclick="addEffortLog('自分の悩みと向き合い、前を向こうとしている')" class="text-left p-3 rounded-2xl bg-komorebi-bg hover:bg-komorebi-greenLight/60 active:scale-[0.99] border border-emerald-900/5 text-xs font-medium text-komorebi-ink transition flex items-center gap-2.5">
+            <span class="text-base">✨</span>
+            <span>自分の悩みと向き合い、前を向こうとしている</span>
+          </button>
+        </div>
+
+        <div class="flex gap-2 pt-1">
+          <input
+            id="customEffortInput"
+            type="text"
+            placeholder="他にも：身だしなみを整えた、美味しいご飯を食べた…"
+            class="flex-1 rounded-2xl bg-komorebi-bg border border-emerald-900/10 focus:border-komorebi-green px-3.5 py-2.5 text-xs sm:text-sm outline-none"
+          >
+          <button
+            type="button"
+            onclick="submitCustomEffort()"
+            class="px-4 py-2.5 rounded-2xl bg-komorebi-green text-white text-xs font-bold hover:opacity-95 active:scale-95 transition whitespace-nowrap"
+          >
+            ＋ 記録
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-br from-amber-50 via-orange-50/70 to-emerald-50/60 rounded-3xl p-5 sm:p-6 shadow-soft border border-amber-200/70 space-y-3">
+        <div>
+          <h3 class="font-rounded font-bold text-base text-amber-950 flex items-center gap-1.5">
+            <span>✉️ あなたが自信を持っていい理由（AI応援レター）</span>
+          </h3>
+          <p class="text-xs text-amber-900/80 mt-1 leading-relaxed">
+            これまであなたが記録したがんばりや気持ちをもとに、客観的な視点から「あなたの魅力と強み」をまとめた手紙をお届けします。
+          </p>
+        </div>
+
+        <button
+          id="generateLetterBtn"
+          type="button"
+          onclick="generateSupportLetter()"
+          class="w-full py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-rounded font-bold text-xs sm:text-sm shadow-sm transition"
+        >
+          今の私への応援レターを受け取る
+        </button>
+
+        <div id="supportLetterBox" class="hidden bg-white/95 rounded-2xl p-4 sm:p-5 border border-amber-200/80 shadow-2xs space-y-2">
+          <div class="flex items-center justify-between text-[11px] text-amber-800 font-medium">
+            <span>🌿 komorebi より愛と敬意をこめて</span>
+            <span id="letterDate"></span>
+          </div>
+          <p id="supportLetterText" class="text-sm text-komorebi-ink leading-relaxed whitespace-pre-line"></p>
+        </div>
+      </div>
+
+      <div class="space-y-2.5">
+        <h3 class="font-rounded font-bold text-sm text-komorebi-ink px-1">🌼 これまでの「できたこと」リスト</h3>
+        <div id="effortHistoryList" class="space-y-2"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ボトムナビゲーションバー -->
+  <nav class="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-emerald-900/10 pb-safe">
+    <div class="max-w-2xl mx-auto grid grid-cols-3 px-2 py-1.5">
+      <button
+        type="button"
+        onclick="switchTab('journal')"
+        data-tab="journal"
+        class="nav-btn active flex flex-col items-center justify-center py-2 px-1 rounded-2xl text-komorebi-green font-bold transition"
+      >
+        <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        </svg>
+        <span class="text-[11px]">気持ち整理</span>
+      </button>
+
+      <button
+        type="button"
+        onclick="switchTab('discover')"
+        data-tab="discover"
+        class="nav-btn flex flex-col items-center justify-center py-2 px-1 rounded-2xl text-komorebi-muted hover:text-komorebi-ink font-medium transition"
+      >
+        <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        <span class="text-[11px]">気分転換＆ヒント</span>
+      </button>
+
+      <button
+        type="button"
+        onclick="switchTab('garden')"
+        data-tab="garden"
+        class="nav-btn flex flex-col items-center justify-center py-2 px-1 rounded-2xl text-komorebi-muted hover:text-komorebi-ink font-medium transition"
+      >
+        <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+        <span class="text-[11px]">がんばり貯金</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- アプリケーションロジック -->
+  <script>
+    // =========================================================================
+    // 1. 状態管理（LocalStorage による永続化）
+    // =========================================================================
+    const STORAGE_KEYS = {
+      JOURNALS: 'komorebi_journals_v1',
+      EFFORTS: 'komorebi_efforts_v1'
+    };
+
+    let selectedCategory = '自信・自己評価のギャップ';
+    let currentDiscoverFilter = 'all';
+
+    // 今日の木漏れ日メッセージ集
+    const DAILY_MESSAGES = [
+      '「ちゃんとできているのに自信がない」のは、それだけあなたが誠実に物事と向き合ってきた証拠です。今日は少しだけ肩の力を抜いてみましょう。',
+      '外側からの評価と、内側の安心感は別のもの。今日は「すごい自分」ではなく「今のままの自分」に温かいお茶を一杯いれてあげませんか？',
+      '恋愛も人生も、100点満点の正解を探さなくて大丈夫。迷いながらも丁寧に考えている今の姿勢そのものが、あなたの魅力です。',
+      '木漏れ日は、葉っぱが重なり合っているからこそ生まれます。心の中のモヤモヤも、新しい光が差し込む前の大切な時間です。',
+      '今まで乗り越えてきたたくさんの日々を、一番近くで見ていたのはあなた自身。今日は「よくやってるよ」と心の中で声をかけてみてください。'
+    ];
+    let currentMessageIndex = 0;
+
+    // カテゴリ別の書き出し補助チップ
+    const PROMPT_STARTERS = {
+      '自信・自己評価のギャップ': [
+        '周りからは恵まれていると言われるのに、なぜか不安が消えない…',
+        'ちゃんと準備して結果も出しているのに、自分では全然足りなく感じる…',
+        '失敗したらどうしようと、いつも自分を厳しく採点してしまう…'
+      ],
+      '日頃のモヤモヤ': [
+        '理由がはっきりしないけれど、なんとなく心が重たくてスッキリしない…',
+        '人の言葉や空気を敏感に受け取りすぎて、一人になるとどっと疲れる…',
+        '頭の中で同じことをぐるぐる考え続けてしまう…'
+      ],
+      '恋愛の悩み': [
+        '相手の反応を深読みしすぎて、自分の気持ちを素直に出せない…',
+        '好きだからこそ不安になったり、自分に自信がなくなったりする…',
+        'これからの関係や、自分にとって本当に心地よい距離感がわからない…'
+      ],
+      '人生・これからのこと': [
+        'この先のキャリアや生き方について、何を軸に選べばいいか迷っている…',
+        '周りの人と比べてしまい、自分らしいペースを見失いそうになる…',
+        '毎日頑張っているけれど、本当にやりたいことが何なのか立ち止まって考えたい…'
+      ]
+    };
+
+    // デフォルトの2方向キュレーションデータ
+    const DEFAULT_CURATIONS = [
+      {
+        id: 'cur-1',
+        type: 'insight',
+        badge: '💡 視点転換・糸口',
+        title: '「実績も見た目も整っているのに自信がない」正体：インポスター症候群の解き方',
+        summary: '高い基準を持ち、努力を当たり前にこなしてしまう人ほど「自分はまだ不十分だ」と感じやすい心理メカニズムと、客観的な自己評価を取り戻す3つの習慣。',
+        tag: '自己肯定・心理学',
+        searchQuery: 'インポスター症候群 自信がない 心理 解決'
+      },
+      {
+        id: 'cur-2',
+        type: 'refresh',
+        badge: '🎈 気分転換・笑い',
+        title: '【3分で心がほどける】世界中の「ちょっとドジで愛おしい動物たち」の癒やし映像集',
+        summary: '考えすぎて頭がパンパンなときは、理屈抜きで笑える瞬間が一番の特効薬。子犬や猫、レッサーパンダの予想外な動きで脳をリフレッシュしましょう。',
+        tag: '癒やし・お笑い動画',
+        searchQuery: '癒やし 動物 おもしろ 動画 3分'
+      },
+      {
+        id: 'cur-3',
+        type: 'insight',
+        badge: '💡 視点転換・糸口',
+        title: '恋愛で「嫌われたくない」「自信がない」と不安になるときに思い出したい自分軸の作り方',
+        summary: '相手の気持ちを想像しすぎて疲れてしまう優しい人のための記事。「相手にどう思われるか」から「自分がどう感じているか」へ視点を戻すヒント。',
+        tag: '恋愛・人間関係',
+        searchQuery: '恋愛 不安 自信がない 自分軸 心理学'
+      },
+      {
+        id: 'cur-4',
+        type: 'refresh',
+        badge: '🎈 気分転換・笑い',
+        title: '日常の見え方がちょっと面白くなる「世界の不思議な雑学＆ほっこりニュース」まとめ',
+        summary: '「ラッコは寝るときに手をつなぐ」「北欧のカフェの心地よい習慣」など、今の悩みとはまったく違う世界の広がりに触れて気分を切り替えられる読み物。',
+        tag: '面白い読み物・雑学',
+        searchQuery: 'ほっこり ニュース 面白い 雑学 世界'
+      },
+      {
+        id: 'cur-5',
+        type: 'insight',
+        badge: '💡 視点転換・糸口',
+        title: '人生の迷子になったときの「価値観の棚卸し」ワーク：手放していい思い込みとは？',
+        summary: '「こうあるべき」という外側の基準ではなく、あなた自身が本当に心地よいと感じる瞬間を見つけるためのシンプルな質問リスト。',
+        tag: '人生・キャリア',
+        searchQuery: '人生 迷い 価値観 ワーク 考え方'
+      },
+      {
+        id: 'cur-6',
+        type: 'refresh',
+        badge: '🎈 気分転換・笑い',
+        title: '寝る前や休憩中に聴きたい「焚き火と森の木漏れ日」アンビエントサウンド＆散歩映像',
+        summary: '画面を眺めているだけで深呼吸したくなる、日本の美しい森とせせらぎの4K散歩動画。スマホを置いて目を閉じても楽しめます。',
+        tag: '自然・リラックス',
+        searchQuery: '森 木漏れ日 せせらぎ 自然音 作業用BGM'
+      }
+    ];
+
+    // =========================================================================
+    // 2. 初期化処理
+    // =========================================================================
+    window.onload = function() {
+      try {
+        registerKomorebiIconAndManifest();
+        setupCategoryChips();
+        renderPromptStarters();
+        setupEnergySlider();
+        renderJournalHistory();
+        renderCurations(DEFAULT_CURATIONS);
+        renderEffortGarden();
+      } catch (err) {
+        console.warn('初期化エラー:', err);
+      }
+    };
+
+    // =========================================================================
+    // 3. 「komorebi」ホーム画面用アイコン＆Web App Manifest の自動登録
+    //    （Webサーバー上で開いた際にブラウザが自動でアイコンとアプリ名を認識します）
+    // =========================================================================
+    function registerKomorebiIconAndManifest() {
+      const canvas = document.getElementById('iconGeneratorCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const size = 512;
+
+      // 背景グラデーション
+      const bgGrad = ctx.createLinearGradient(0, 0, size, size);
+      bgGrad.addColorStop(0, '#E3F3EA');
+      bgGrad.addColorStop(0.5, '#FEF8E4');
+      bgGrad.addColorStop(1, '#FCE6D2');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, size, size);
+
+      // 木漏れ日の光線
+      const rayGrad = ctx.createLinearGradient(size * 0.9, 0, size * 0.25, size * 0.85);
+      rayGrad.addColorStop(0, 'rgba(253, 224, 71, 0.55)');
+      rayGrad.addColorStop(0.6, 'rgba(254, 240, 138, 0.22)');
+      rayGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+
+      ctx.fillStyle = rayGrad;
+      ctx.beginPath();
+      ctx.moveTo(size, 0);
+      ctx.lineTo(size * 0.45, 0);
+      ctx.lineTo(size * 0.12, size * 0.85);
+      ctx.lineTo(size * 0.72, size * 0.85);
+      ctx.closePath();
+      ctx.fill();
+
+      // 光の粒
+      const particles = [
+        [240, 210, 6], [310, 250, 5], [190, 275, 4.5],
+        [285, 175, 4], [220, 310, 3.5], [345, 220, 5],
+        [265, 290, 4], [175, 225, 3.5]
+      ];
+      particles.forEach(([px, py, pr]) => {
+        ctx.beginPath();
+        ctx.arc(px, py, pr, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 253, 235, 0.85)';
+        ctx.fill();
+      });
+
+      // 右上の枝と葉
+      ctx.strokeStyle = '#7A5C43';
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(310, 35);
+      ctx.quadraticCurveTo(400, 65, 495, 135);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(395, 72);
+      ctx.quadraticCurveTo(435, 125, 485, 185);
+      ctx.stroke();
+
+      function drawLeaf(x, y, rx, ry, angleDeg, color) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate((angleDeg * Math.PI) / 180);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      drawLeaf(325, 58, 34, 15, -25, '#4A7C59');
+      drawLeaf(385, 52, 38, 17, -12, '#D9A738');
+      drawLeaf(445, 78, 40, 18, 15, '#3A6B4A');
+      drawLeaf(365, 98, 32, 14, 32, '#6BA37A');
+      drawLeaf(425, 125, 36, 16, 28, '#E0B446');
+      drawLeaf(468, 148, 38, 16, 40, '#4A7C59');
+      drawLeaf(412, 168, 30, 13, 52, '#5E9970');
+
+      // 中央の光だまりと双葉の新芽
+      ctx.beginPath();
+      ctx.ellipse(256, 368, 92, 20, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
+      ctx.fill();
+
+      ctx.strokeStyle = '#4A7C59';
+      ctx.lineWidth = 12;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(256, 366);
+      ctx.quadraticCurveTo(254, 322, 256, 300);
+      ctx.stroke();
+
+      ctx.fillStyle = '#5D966D';
+      ctx.beginPath();
+      ctx.moveTo(256, 306);
+      ctx.bezierCurveTo(212, 258, 175, 278, 195, 314);
+      ctx.bezierCurveTo(210, 338, 245, 324, 256, 306);
+      ctx.fill();
+
+      ctx.fillStyle = '#7AB356';
+      ctx.beginPath();
+      ctx.moveTo(256, 306);
+      ctx.bezierCurveTo(300, 258, 337, 278, 317, 314);
+      ctx.bezierCurveTo(302, 338, 267, 324, 256, 306);
+      ctx.fill();
+
+      // ロゴテキスト「komorebi」
+      ctx.fillStyle = '#5B4636';
+      ctx.font = '700 54px "M PLUS Rounded 1c", "Inter", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('komorebi', 256, 434);
+
+      const iconDataUrl = canvas.toDataURL('image/png');
+      const touchLink = document.getElementById('apple-touch-icon');
+      const favLink = document.getElementById('app-favicon');
+      const manifestLink = document.getElementById('app-manifest');
+
+      if (touchLink) touchLink.href = iconDataUrl;
+      if (favLink) favLink.href = iconDataUrl;
+
+      // Chrome / Android ホーム画面追加用の Web App Manifest を動的生成
+      if (manifestLink && window.location.protocol.startsWith('http')) {
+        const manifestData = {
+          name: 'komorebi（コモレビ）',
+          short_name: 'komorebi',
+          description: '日々のモヤモヤ・悩みと向き合い、気分転換と自己肯定を育てるアプリ',
+          start_url: window.location.href,
+          display: 'standalone',
+          background_color: '#FAF8F3',
+          theme_color: '#FAF8F3',
+          icons: [
+            {
+              src: iconDataUrl,
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any maskable'
+            }
+          ]
+        };
+        const blob = new Blob([JSON.stringify(manifestData)], { type: 'application/manifest+json' });
+        manifestLink.href = URL.createObjectURL(blob);
+      }
+    }
+
+    // =========================================================================
+    // 4. UIインタラクション
+    // =========================================================================
+    function showToast(message) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'bg-komorebi-ink/95 text-white text-xs sm:text-sm font-medium px-4 py-3 rounded-2xl shadow-lg backdrop-blur-xs max-w-sm text-center transition-all duration-300 opacity-0 translate-y-[-8px]';
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('opacity-0', 'translate-y-[-8px]');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-[-8px]');
+        setTimeout(() => toast.remove(), 300);
+      }, 2800);
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.add('hidden');
+      });
+      const targetPanel = document.getElementById(`panel-${tabName}`);
+      if (targetPanel) {
+        targetPanel.classList.remove('hidden');
+      }
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const isTarget = btn.dataset.tab === tabName;
+        if (isTarget) {
+          btn.classList.add('text-komorebi-green', 'font-bold', 'bg-komorebi-greenLight/50');
+          btn.classList.remove('text-komorebi-muted', 'font-medium');
+        } else {
+          btn.classList.remove('text-komorebi-green', 'font-bold', 'bg-komorebi-greenLight/50');
+          btn.classList.add('text-komorebi-muted', 'font-medium');
+        }
+      });
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function rotateDailyMessage() {
+      currentMessageIndex = (currentMessageIndex + 1) % DAILY_MESSAGES.length;
+      const el = document.getElementById('dailyAffirmation');
+      el.style.opacity = '0';
+      setTimeout(() => {
+        el.textContent = DAILY_MESSAGES[currentMessageIndex];
+        el.style.opacity = '1';
+      }, 160);
+    }
+
+    function setupCategoryChips() {
+      document.querySelectorAll('.category-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          document.querySelectorAll('.category-chip').forEach(c => {
+            c.classList.remove('bg-komorebi-green', 'text-white', 'border-komorebi-green', 'shadow-xs');
+            c.classList.add('bg-komorebi-bg', 'text-komorebi-ink', 'border-emerald-900/10');
+          });
+          chip.classList.add('bg-komorebi-green', 'text-white', 'border-komorebi-green', 'shadow-xs');
+          chip.classList.remove('bg-komorebi-bg', 'text-komorebi-ink', 'border-emerald-900/10');
+
+          selectedCategory = chip.dataset.category;
+          renderPromptStarters();
+        });
+      });
+    }
+
+    function renderPromptStarters() {
+      const container = document.getElementById('promptStarters');
+      const starters = PROMPT_STARTERS[selectedCategory] || PROMPT_STARTERS['日頃のモヤモヤ'];
+      container.innerHTML = '';
+
+      starters.forEach(text => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'flex-shrink-0 px-3 py-1.5 rounded-xl bg-amber-50/90 hover:bg-amber-100/80 border border-amber-200/70 text-[11px] text-amber-950 transition';
+        btn.textContent = `＋ ${text.slice(0, 22)}…`;
+        btn.onclick = () => {
+          const input = document.getElementById('worryInput');
+          input.value = text;
+          input.focus();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function setupEnergySlider() {
+      const slider = document.getElementById('energySlider');
+      const label = document.getElementById('energyLabel');
+      slider.addEventListener('input', () => {
+        const val = parseInt(slider.value, 10);
+        let status = 'ちょうど半分くらい';
+        if (val <= 25) status = 'かなり消耗中（休息が最優先）';
+        else if (val <= 50) status = '少しお疲れ気味';
+        else if (val <= 75) status = 'まずまず安定';
+        else status = '元気・前向き！';
+        label.textContent = `${val}%（${status}）`;
+      });
+    }
+
+    // =========================================================================
+    // 5. Gemini API 連携（指数バックオフ付き）＋ フォールバック応答
+    // =========================================================================
+    async function fetchWithBackoff(url, options, maxRetries = 4) {
+      let delay = 1000;
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          const response = await fetch(url, options);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          return await response.json();
+        } catch (err) {
+          if (attempt === maxRetries) throw err;
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay *= 2;
+        }
+      }
+    }
+
+    async function handleJournalSubmit() {
+      const inputEl = document.getElementById('worryInput');
+      const text = inputEl.value.trim();
+      const energy = document.getElementById('energySlider').value;
+
+      if (!text) {
+        showToast('まずは今の気持ちを少しでも書いてみてくださいね 🌿');
+        inputEl.focus();
+        return;
+      }
+
+      const btn = document.getElementById('analyzeBtn');
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-pulse">✨ あなたの気持ちを受け止めて整理しています…</span>`;
+
+      try {
+        const aiResult = await analyzeWorryWithGemini(selectedCategory, text, energy);
+        displayAiResponse(selectedCategory, aiResult);
+        saveJournalEntry({
+          id: Date.now(),
+          date: new Date().toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          category: selectedCategory,
+          energy: energy,
+          text: text,
+          feedback: aiResult
+        });
+        inputEl.value = '';
+        showToast('気持ちを整理してノートに保存しました 🌱');
+      } catch (err) {
+        const fallbackResult = buildFallbackAnalysis(selectedCategory, text, energy);
+        displayAiResponse(selectedCategory, fallbackResult);
+        saveJournalEntry({
+          id: Date.now(),
+          date: new Date().toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          category: selectedCategory,
+          energy: energy,
+          text: text,
+          feedback: fallbackResult
+        });
+        inputEl.value = '';
+        showToast('気持ちを整理してノートに保存しました 🌱');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    }
+
+    async function analyzeWorryWithGemini(category, text, energy) {
+      const apiKey = "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      const systemPrompt = `あなたは優しく知的な心理カウンセラー兼ライフコーチ「komorebi（コモレビ）」です。
+ユーザーは日々とても頑張っており、外見や形式的な条件・周囲からの評価にも恵まれている面がありながら、内面では自信が持てなかったり、日頃のモヤモヤ・恋愛・人生の悩みを抱えています。
+以下の4つの要素を、温かく押し付けがましくない日本語のJSONで返してください。
+1. empathy: ユーザーの気持ちやこれまでの努力を否定せず受け止める共感メッセージ（2〜3文）
+2. insight: なぜそのモヤモヤや自信のなさが起きるのか、心理的な背景や構造の優しい紐解き（2〜3文）
+3. reframe: 同じ状況を別の角度から見た「視点の転換（リフレーミング）」（2文）
+4. action: 今のエネルギー残量（${energy}%）でも無理なくできる1ミリの小さな行動提案（1〜2文）`;
+
+      const payload = {
+        contents: [{
+          parts: [{
+            text: `テーマ: ${category}\n今のエネルギー残量: ${energy}%\nユーザーの言葉: ${text}`
+          }]
+        }],
+        systemInstruction: {
+          parts: [{ text: systemPrompt }]
+        },
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              empathy: { type: "STRING" },
+              insight: { type: "STRING" },
+              reframe: { type: "STRING" },
+              action: { type: "STRING" }
+            },
+            required: ["empathy", "insight", "reframe", "action"]
+          }
+        }
+      };
+
+      const result = await fetchWithBackoff(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const rawJson = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!rawJson) throw new Error('Empty response');
+      return JSON.parse(rawJson);
+    }
+
+    function buildFallbackAnalysis(category, text, energy) {
+      const energyNum = parseInt(energy, 10);
+      const lowEnergy = energyNum <= 40;
+
+      const templates = {
+        '自信・自己評価のギャップ': {
+          empathy: '周りから見れば十分に素敵で頑張っているのに、心の中では安心できないお気持ち、よく打ち明けてくださいました。それだけあなたが日々高い基準で誠実に努力を重ねてきたからこそ感じる繊細な揺れですね。',
+          insight: '外側が整っている人ほど、「期待に応えなければ」「本来の自分を見られたらどうしよう」と無意識にハードルを上げ続けてしまい、達成感よりも不安が先に立ちやすくなります（心理学的にも真面目で優秀な人に多い傾向です）。',
+          reframe: '自信がないのは「能力が足りないから」ではなく、「もっと良くありたいと願う誠実さがあるから」。すでに積み上げてきた事実は、あなたの気分に関係なく消えない財産です。',
+          action: lowEnergy
+            ? '今日は新しい努力を足すのを一度お休みして、「今日すでに終えたこと」を1つだけ指折り数えて深呼吸してみましょう。'
+            : '今日自分が「当たり前のようにこなしたこと」を1つ、がんばり貯金タブに記録して客観的な証拠を残してみましょう。'
+        },
+        '恋愛の悩み': {
+          empathy: '大切な関係だからこそ、相手の気持ちやこれからのことを深く考えてモヤモヤしてしまいますよね。それだけ相手や自分の人生に真剣に向き合っている証拠です。',
+          insight: '恋愛で不安になるとき、私たちの意識は「相手がどう思うか」というコントロールできない領域に集中しがちで、本来の自分の魅力や心地よさが見えにくくなります。',
+          reframe: 'あなたが相手を思いやって悩む優しさは、本来とても温かいギフトです。「好かれるために頑張る」から「自分が心地よく笑える時間を選ぶ」へ少しだけ視点を戻してみましょう。',
+          action: lowEnergy
+            ? 'スマホから少し目を離して、好きな飲み物をゆっくり味わいながら自分の心を労ってあげてください。'
+            : '「もし親友が同じ恋愛の悩みを相談してきたら、どんな優しい言葉をかけるか」を1行だけ想像してみましょう。'
+        },
+        '人生・これからのこと': {
+          empathy: 'これからの歩みについて立ち止まって考える時間は、決して後退ではなく、自分らしい人生を大切にするための重要なステップです。',
+          insight: '周囲の期待や世間の「こうあるべき」にしっかり応えてこられた方ほど、ふとした瞬間に「自分の本音はどこにあるんだろう？」と静かな問いが浮かびやすくなります。',
+          reframe: '今すぐ完璧な答えや10年後の地図を描かなくても大丈夫。今の迷いは、あなたが次のステージへ進むために自分の価値観をアップデートしているサインです。',
+          action: lowEnergy
+            ? '今日は「決断しない日」と決めて、気分転換タブの癒やしコンテンツを眺めて頭を休ませましょう。'
+            : '「これだけは手放したくない心地よい時間」を1つだけ思い浮かべてみてください。'
+        },
+        '日頃のモヤモヤ': {
+          empathy: '言葉にしづらいモヤモヤを抱えながらも、今日まで日常を回してこられたこと自体が本当に素晴らしいことです。',
+          insight: '日々の小さな気遣いや情報の多さが積み重なると、心の余白がいっぱいになり、明確な理由がなくても重たさを感じることがあります。',
+          reframe: 'モヤモヤは「そろそろ心の換気をしてね」という優しいアラーム。今こうして書き出した時点で、心の中の荷物はすでに少し軽くなっています。',
+          action: lowEnergy
+            ? '肩をぐっと上げてストンと落とす深呼吸を3回だけして、身体の力を抜いてみましょう。'
+            : '気分転換タブで、クスッと笑える話題を1つ覗いて脳のチャンネルを切り替えてみましょう。'
+        }
+      };
+
+      return templates[category] || templates['日頃のモヤモヤ'];
+    }
+
+    function displayAiResponse(category, data) {
+      const container = document.getElementById('aiResponseContainer');
+      document.getElementById('responseCategoryTag').textContent = `テーマ：${category}`;
+      document.getElementById('resEmpathy').textContent = data.empathy;
+      document.getElementById('resInsight').textContent = data.insight;
+      document.getElementById('resReframe').textContent = data.reframe;
+      document.getElementById('resAction').textContent = data.action;
+
+      container.classList.remove('hidden');
+      container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function jumpToCuratedForCurrentTopic() {
+      const topicInput = document.getElementById('curateTopicInput');
+      topicInput.value = selectedCategory;
+      switchTab('discover');
+      fetchFreshCuration();
+    }
+
+    function getJournals() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEYS.JOURNALS) || '[]');
+      } catch {
+        return [];
+      }
+    }
+
+    function saveJournalEntry(entry) {
+      const list = getJournals();
+      list.unshift(entry);
+      localStorage.setItem(STORAGE_KEYS.JOURNALS, JSON.stringify(list.slice(0, 30)));
+      renderJournalHistory();
+    }
+
+    function deleteJournalEntry(id) {
+      const list = getJournals().filter(item => item.id !== id);
+      localStorage.setItem(STORAGE_KEYS.JOURNALS, JSON.stringify(list));
+      renderJournalHistory();
+      showToast('ノートの記録を削除しました');
+    }
+
+    function renderJournalHistory() {
+      const list = getJournals();
+      const container = document.getElementById('journalHistoryList');
+      const badge = document.getElementById('journalCountBadge');
+      badge.textContent = `${list.length}件`;
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white/70 rounded-2xl p-5 text-center border border-dashed border-emerald-900/15 text-xs text-komorebi-muted">
+            まだ記録はありません。上の欄に今の気持ちを書き出すと、ここに大切な足あとが残ります 🌱
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(item => `
+        <div class="bg-white rounded-2xl p-4 shadow-2xs border border-emerald-900/5 space-y-2">
+          <div class="flex items-center justify-between text-[11px] text-komorebi-muted">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-lg bg-komorebi-greenLight text-komorebi-greenDark font-medium">${escapeHtml(item.category)}</span>
+              <span>${escapeHtml(item.date)}</span>
+            </div>
+            <button type="button" onclick="deleteJournalEntry(${item.id})" class="text-komorebi-muted/60 hover:text-rose-500 px-1.5 py-0.5" title="削除">✕</button>
+          </div>
+          <p class="text-xs sm:text-sm text-komorebi-ink leading-relaxed">${escapeHtml(item.text)}</p>
+          ${item.feedback ? `
+            <div class="pt-2 border-t border-emerald-900/5 text-xs text-komorebi-greenDark bg-komorebi-bg/60 rounded-xl p-2.5">
+              <strong>💡 視点のギフト：</strong>${escapeHtml(item.feedback.reframe)}
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    // =========================================================================
+    // 6. 2方向キュレーション（気分転換 ＆ 視点転換・解決の糸口）
+    // =========================================================================
+    function setDiscoverFilter(filter) {
+      currentDiscoverFilter = filter;
+      document.querySelectorAll('.discover-filter-btn').forEach(btn => {
+        if (btn.dataset.filter === filter) {
+          btn.classList.add('bg-white', 'text-komorebi-ink', 'font-bold', 'shadow-2xs');
+          btn.classList.remove('text-komorebi-muted', 'font-medium');
+        } else {
+          btn.classList.remove('bg-white', 'text-komorebi-ink', 'font-bold', 'shadow-2xs');
+          btn.classList.add('text-komorebi-muted', 'font-medium');
+        }
+      });
+      renderCurations(DEFAULT_CURATIONS);
+    }
+
+    function renderCurations(items) {
+      const container = document.getElementById('curationList');
+      const filtered = currentDiscoverFilter === 'all'
+        ? items
+        : items.filter(item => item.type === currentDiscoverFilter);
+
+      container.innerHTML = filtered.map(item => {
+        const isRefresh = item.type === 'refresh';
+        const badgeStyle = isRefresh
+          ? 'bg-amber-100 text-amber-900'
+          : 'bg-komorebi-greenLight text-komorebi-greenDark';
+        const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.searchQuery)}`;
+        const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(item.searchQuery)}`;
+
+        return `
+          <article class="bg-white rounded-3xl p-5 shadow-card border border-emerald-900/5 space-y-3 transition hover:shadow-soft">
+            <div class="flex items-center justify-between gap-2">
+              <span class="px-2.5 py-1 rounded-xl text-[11px] font-bold ${badgeStyle}">
+                ${escapeHtml(item.badge)}
+              </span>
+              <span class="text-[11px] text-komorebi-muted">${escapeHtml(item.tag)}</span>
+            </div>
+
+            <h3 class="font-rounded font-bold text-sm sm:text-base text-komorebi-ink leading-snug">
+              ${escapeHtml(item.title)}
+            </h3>
+
+            <p class="text-xs text-komorebi-muted leading-relaxed">
+              ${escapeHtml(item.summary)}
+            </p>
+
+            <div class="pt-1 flex flex-wrap gap-2">
+              <a
+                href="${youtubeUrl}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 text-xs font-medium transition"
+              >
+                <span>▶ 関連動画を見る</span>
+              </a>
+              <a
+                href="${googleUrl}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-komorebi-bg hover:bg-emerald-100/70 text-komorebi-greenDark text-xs font-medium transition"
+              >
+                <span>📖 記事・サイトを探す</span>
+              </a>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    async function fetchFreshCuration() {
+      const topic = document.getElementById('curateTopicInput').value.trim() || selectedCategory;
+      const btn = document.getElementById('curateFetchBtn');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-pulse">探索中…</span>`;
+
+      const resultsBox = document.getElementById('liveCurationResults');
+      const cardsContainer = document.getElementById('liveCurationCards');
+
+      try {
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+        const prompt = `ユーザーの今のテーマ・気分：「${topic}」
+このユーザーのために、以下の2つの方向から具体的なおすすめ記事・動画トピック・考え方のヒントを提案してください。
+1.【気分転換・笑い・癒やし】悩みから一度離れてホッと笑えたり心が軽くなる動画・サイト・話題（2つ）
+2.【視点転換・解決の糸口】モヤモヤの背景に気づけたり、自己肯定感や人間関係のヒントになる記事・心理学コラム（2つ）
+それぞれ見やすく簡潔にまとめてください。`;
+
+        const payload = {
+          contents: [{ parts: [{ text: prompt }] }],
+          tools: [{ google_search: {} }]
+        };
+
+        const result = await fetchWithBackoff(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const candidate = result?.candidates?.[0];
+        const generatedText = candidate?.content?.parts?.[0]?.text;
+
+        let sources = [];
+        const attributions = candidate?.groundingMetadata?.groundingAttributions || [];
+        sources = attributions
+          .map(a => ({ uri: a.web?.uri, title: a.web?.title }))
+          .filter(s => s.uri && s.title)
+          .slice(0, 4);
+
+        if (generatedText) {
+          cardsContainer.innerHTML = `
+            <div class="bg-gradient-to-br from-white to-amber-50/60 rounded-3xl p-5 shadow-soft border border-amber-200/80 space-y-3">
+              <div class="text-xs font-bold text-amber-900">✨ 「${escapeHtml(topic)}」のための2方向ピックアップ</div>
+              <div class="text-xs sm:text-sm text-komorebi-ink leading-relaxed whitespace-pre-line">${escapeHtml(generatedText)}</div>
+              ${sources.length > 0 ? `
+                <div class="pt-2 border-t border-amber-200/60 space-y-1.5">
+                  <span class="text-[11px] font-bold text-komorebi-muted block">🔗 参考になるWebページ・記事リンク：</span>
+                  <div class="flex flex-col gap-1.5">
+                    ${sources.map(s => `
+                      <a href="${escapeHtml(s.uri)}" target="_blank" rel="noopener noreferrer" class="text-xs text-komorebi-green underline hover:text-komorebi-greenDark truncate">
+                        ・${escapeHtml(s.title)}
+                      </a>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+          resultsBox.classList.remove('hidden');
+          showToast('気分転換＆ヒントの両面からピックアップしました ✨');
+        } else {
+          throw new Error('No text returned');
+        }
+      } catch {
+        const refreshQuery = `${topic} 気分転換 癒やし 面白い 動画`;
+        const insightQuery = `${topic} 心理学 考え方 解決 ヒント`;
+
+        cardsContainer.innerHTML = `
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="bg-amber-50/90 rounded-2xl p-4 border border-amber-200/80 space-y-2">
+              <span class="text-xs font-bold text-amber-900">🎈 気分転換・リフレッシュ方向</span>
+              <p class="text-xs text-komorebi-ink leading-relaxed">「${escapeHtml(topic)}」から一度頭を切り替えるための、笑える・癒やされる動画やほっこり記事を探せます。</p>
+              <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(refreshQuery)}" target="_blank" rel="noopener noreferrer" class="inline-block px-3 py-1.5 rounded-xl bg-amber-500 text-white text-xs font-bold">
+                ▶ 気分転換の動画を見る
+              </a>
+            </div>
+            <div class="bg-komorebi-greenLight/80 rounded-2xl p-4 border border-komorebi-green/20 space-y-2">
+              <span class="text-xs font-bold text-komorebi-greenDark">💡 視点転換・解決の糸口方向</span>
+              <p class="text-xs text-komorebi-ink leading-relaxed">「${escapeHtml(topic)}」の背景にある心の仕組みや、新しい捉え方のヒントになる記事を探せます。</p>
+              <a href="https://www.google.com/search?q=${encodeURIComponent(insightQuery)}" target="_blank" rel="noopener noreferrer" class="inline-block px-3 py-1.5 rounded-xl bg-komorebi-green text-white text-xs font-bold">
+                📖 視点が変わる記事を読む
+              </a>
+            </div>
+          </div>
+        `;
+        resultsBox.classList.remove('hidden');
+        showToast('2つの方向からリンクを用意しました 🌱');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
+    // =========================================================================
+    // 7. がんばり貯金 ＆ AI応援レター
+    // =========================================================================
+    function getEfforts() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEYS.EFFORTS) || '[]');
+      } catch {
+        return [];
+      }
+    }
+
+    function addEffortLog(text) {
+      const clean = text.trim();
+      if (!clean) return;
+
+      const list = getEfforts();
+      list.unshift({
+        id: Date.now(),
+        text: clean,
+        date: new Date().toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      });
+      localStorage.setItem(STORAGE_KEYS.EFFORTS, JSON.stringify(list.slice(0, 50)));
+      renderEffortGarden();
+      showToast('木漏れ日のしずくが +1 貯まりました ✨');
+    }
+
+    function submitCustomEffort() {
+      const input = document.getElementById('customEffortInput');
+      if (!input.value.trim()) {
+        showToast('今日できた小さなことを入力してくださいね 🌱');
+        input.focus();
+        return;
+      }
+      addEffortLog(input.value);
+      input.value = '';
+    }
+
+    function renderEffortGarden() {
+      const list = getEfforts();
+      const count = list.length;
+
+      document.getElementById('totalDropsCount').textContent = count;
+      const headerCount = document.getElementById('headerDropsCount');
+      if (headerCount) headerCount.textContent = count;
+
+      const stageTitle = document.getElementById('sproutStageTitle');
+      const blossom = document.getElementById('sproutBlossom');
+      if (count >= 10) {
+        stageTitle.textContent = 'あたたかな光を浴びて花が咲いた新芽 🌸';
+        blossom.classList.remove('hidden');
+      } else if (count >= 4) {
+        stageTitle.textContent = 'しっかりと根を張り始めた若葉 🌿';
+        blossom.classList.add('hidden');
+      } else {
+        stageTitle.textContent = '芽吹いたばかりの小さな双葉 🌱';
+        blossom.classList.add('hidden');
+      }
+
+      const container = document.getElementById('effortHistoryList');
+      if (count === 0) {
+        container.innerHTML = `
+          <div class="bg-white/70 rounded-2xl p-4 text-center border border-dashed border-emerald-900/15 text-xs text-komorebi-muted">
+            上のボタンをタップして、今日の「小さなできたこと」を1つ貯めてみましょう ✨
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(item => `
+        <div class="bg-white rounded-2xl px-4 py-3 shadow-2xs border border-emerald-900/5 flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <span class="text-amber-500 text-sm">☀️</span>
+            <span class="text-xs sm:text-sm text-komorebi-ink">${escapeHtml(item.text)}</span>
+          </div>
+          <span class="text-[11px] text-komorebi-muted flex-shrink-0">${escapeHtml(item.date)}</span>
+        </div>
+      `).join('');
+    }
+
+    async function generateSupportLetter() {
+      const btn = document.getElementById('generateLetterBtn');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '✉️ あなたの歩みを振り返りながら手紙を書いています…';
+
+      const efforts = getEfforts().slice(0, 8).map(e => e.text);
+      const journals = getJournals().slice(0, 3).map(j => `${j.category}: ${j.text}`);
+
+      const box = document.getElementById('supportLetterBox');
+      const textEl = document.getElementById('supportLetterText');
+      const dateEl = document.getElementById('letterDate');
+
+      try {
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+        const prompt = `あなたは温かく誠実な伴走者「komorebi」です。
+ユーザーがこれまで積み重ねた「がんばり記録」と「向き合っている気持ち」をもとに、ユーザーが自分自身に根拠のある自信を持てるような短い応援レター（250〜350文字程度）を書いてください。
+お世辞ではなく、記録された事実と、自分の心と向き合おうとする姿勢の尊さを具体的に讃えてください。
+
+【最近のがんばり記録】
+${efforts.length > 0 ? efforts.join('\n') : '・今日も自分の心と向き合い、前向きに過ごそうとしている'}
+
+【向き合っている気持ち】
+${journals.length > 0 ? journals.join('\n') : '・頑張っているのに自信が持てない気持ちや、日々のモヤモヤと向き合っている'}`;
+
+        const payload = {
+          contents: [{ parts: [{ text: prompt }] }]
+        };
+
+        const result = await fetchWithBackoff(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const letter = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!letter) throw new Error('Empty letter');
+
+        dateEl.textContent = new Date().toLocaleDateString('ja-JP');
+        textEl.textContent = letter.trim();
+        box.classList.remove('hidden');
+        showToast('あなたへの応援レターが届きました ✉️');
+      } catch {
+        const sampleEffort = efforts[0] || '今日という一日を丁寧に始めようとしていること';
+        dateEl.textContent = new Date().toLocaleDateString('ja-JP');
+        textEl.textContent = `いつも本当にたくさんのことを考え、誠実に日々を積み重ねているあなたへ。\n\n「${sampleEffort}」をはじめ、あなたが普段「当たり前」だと思ってこなしている一つひとつの行動は、決して誰にでもできることではありません。外側が整っていても心が揺れるのは、あなたが自分の人生や周りの人に対して真剣で優しいからこそです。\n\nどうか今日は、結果や完璧さではなく「今日もよく向き合ったね」と、一番近くにいるあなた自身が味方になってあげてください。あなたはもう十分に素敵で、自信を持って歩いていい人です。`;
+        box.classList.remove('hidden');
+        showToast('あなたへの応援レターが届きました ✉️');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+  </script>
+</body>
+</html>
